@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # schemaset.sh — create, update, and list Fabric Event Schema Sets via REST.
 #
-# Wraps the Fabric REST API for Event Schema Sets, calling it through the Azure
-# CLI (az) or the Fabric CLI (fab) with your signed-in User identity.
+# Wraps the Fabric REST API for Event Schema Sets. Calls are made with curl; the
+# bearer token comes from the Azure CLI (az), using your signed-in User identity.
 #
 #   create   Create a schema set from a sample (optionally inside a folder).
 #              POST /v1/workspaces/{ws}/eventSchemaSets                    (workspace root)
@@ -17,12 +17,13 @@
 # build-definition.sh) unless --no-build is given. Add --dry-run to print the
 # REST call (and request body) without sending it.
 #
-# Prereqs: jq, and az or fab authenticated (az login / fab auth login).
+# Prereqs: az (signed in via 'az login'), plus curl and jq.
 # Docs: https://learn.microsoft.com/en-us/rest/api/fabric/eventschemaset/items
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 API_BASE="https://api.fabric.microsoft.com/v1"
+FABRIC_RESOURCE="https://api.fabric.microsoft.com"
 
 usage () {
   cat <<'EOF'
@@ -110,23 +111,42 @@ trap '[ -n "$BODY_TMP" ] && rm -f "$BODY_TMP"' EXIT
 # show METHOD ENDPOINT — print the REST request line being issued.
 show () { echo "REST> $1 $API_BASE/$2"; }
 
-# call_api METHOD ENDPOINT [BODY_FILE] — authenticated Fabric REST call via az or fab.
+# access_token — a bearer token for the Fabric API, minted by the Azure CLI.
+access_token () {
+  command -v az >/dev/null 2>&1 || {
+    echo "Error: the Azure CLI (az) is required for authentication. Install it, then 'az login'." >&2; exit 1; }
+  local t
+  t="$(az account get-access-token --resource "$FABRIC_RESOURCE" --query accessToken -o tsv 2>/dev/null || true)"
+  if [ -z "$t" ]; then
+    echo "Error: could not get an access token. Run 'az login' first." >&2; exit 1
+  fi
+  printf '%s' "$t"
+}
+
+# call_api METHOD ENDPOINT [BODY_FILE] — Fabric REST call via curl (token from az).
+# ENDPOINT is relative to $API_BASE. Prints the response body on success; on an
+# HTTP >= 400 status it prints the status + body to stderr and exits 1.
 call_api () {
-  local method="$1" endpoint="$2" body="${3:-}"
-  if command -v az >/dev/null 2>&1; then
-    local a=(--method "$method" --resource "https://api.fabric.microsoft.com"
-             --url "$API_BASE/$endpoint")
-    if [ "$method" != get ]; then a+=(--headers "Content-Type=application/json"); fi
-    if [ -n "$body" ]; then a+=(--body "@$body"); fi
-    az rest "${a[@]}"
-  elif command -v fab >/dev/null 2>&1; then
-    local a=("$endpoint" -X "$method")
-    if [ -n "$body" ]; then a+=(-H "content-type=application/json" -i "$body"); fi
-    fab api "${a[@]}"
-  else
-    echo "Neither az nor fab found. Install one and re-run." >&2
+  command -v curl >/dev/null 2>&1 || { echo "Error: curl is required." >&2; exit 1; }
+  local method endpoint body token url resp code
+  method="$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')"
+  endpoint="$2"; body="${3:-}"
+  token="$(access_token)"
+  url="$API_BASE/$endpoint"
+  local args=(-sS -X "$method" -H "Authorization: Bearer $token")
+  if [ -n "$body" ]; then
+    args+=(-H "Content-Type: application/json" --data-binary "@$body")
+  fi
+  # Append the HTTP status on its own trailing line, then split it back off.
+  resp="$(curl "${args[@]}" -w $'\n%{http_code}' "$url")"
+  code="${resp##*$'\n'}"
+  resp="${resp%$'\n'*}"
+  if ! [[ "$code" =~ ^2[0-9][0-9]$ ]]; then
+    echo "HTTP $code — $method $url" >&2
+    if [ -n "$resp" ]; then printf '%s\n' "$resp" | jq . 2>/dev/null >&2 || printf '%s\n' "$resp" >&2; fi
     exit 1
   fi
+  printf '%s' "$resp"
 }
 
 def_file () { echo "${SAMPLE_DIR%/}/EventSchemaSetDefinition.json"; }
@@ -221,8 +241,15 @@ case "$COMMAND" in
       schemasets)
         show GET "workspaces/$WORKSPACE_ID/eventSchemaSets"
         [ -n "$DRY_RUN" ] && exit 0
-        call_api get "workspaces/$WORKSPACE_ID/eventSchemaSets" \
-          | jq '.value[] | { id, displayName, description }'
+        resp="$(call_api get "workspaces/$WORKSPACE_ID/eventSchemaSets")"
+        if [ "$(printf '%s' "$resp" | jq '.value | length')" -eq 0 ]; then
+          echo "No event schema sets found in workspace $WORKSPACE_ID."
+        else
+          printf '%s' "$resp" | jq -r '.value[] | "\(.id)  \(.displayName)"'
+        fi
+        if printf '%s' "$resp" | jq -e 'has("continuationToken")' >/dev/null 2>&1; then
+          echo "(more results available; this lists only the first page)" >&2
+        fi
         ;;
       event-types)
         require_schemaset event-types

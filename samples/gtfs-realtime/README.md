@@ -34,7 +34,7 @@ gtfs-realtime/
 
 ## Create the schema set
 
-**Prerequisites:** a Fabric workspace, `jq`, and `az` or `fab` signed in as a user — see the [repository README](../../README.md#prerequisites). Run these from the **repo root**.
+**Prerequisites:** a Fabric workspace, `curl`, `jq`, and `az` signed in as a user — see the [repository README](../../README.md#prerequisites). Run these from the **repo root**.
 
 ```bash
 # Build this sample's EventSchemaSetDefinition.json from manifest.json + schemas/*.avsc (offline)
@@ -53,13 +53,13 @@ gtfs-realtime/
 ./schemaset.sh --help
 ```
 
-`schemaset.sh create` rebuilds the definition first (pass `--no-build` to reuse the existing file), base64-encodes it into the item definition part, and creates the item via `az rest` or `fab api`.
+`schemaset.sh create` rebuilds the definition first (pass `--no-build` to reuse the existing file), base64-encodes it into the item definition part, and creates the item with `curl` (bearer token from `az`).
 
 **Folder placement:** the typed `POST .../eventSchemaSets` endpoint has no `folderId`, so when `--folder-id` is given the item is created via the generic **Create Item** endpoint (`POST .../items` with `type: "EventSchemaSet"` + `folderId`). Folder IDs are GUIDs — find one in the Fabric portal URL when the folder is open, or via the [List Folders](https://learn.microsoft.com/en-us/rest/api/fabric/core/folders/list-folders) API.
 
 ## Explore with the REST API
 
-[`schemaset.sh`](../../schemaset.sh) wraps the individual Fabric REST calls behind these operations. Each command prints the request it issues (add `--dry-run` to print without sending), then runs it via `az` or `fab`.
+[`schemaset.sh`](../../schemaset.sh) wraps the individual Fabric REST calls behind these operations. Each command prints the request it issues (add `--dry-run` to print without sending), then runs it with `curl` (bearer token from `az`).
 
 | Operation | REST call |
 |---|---|

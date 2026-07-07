@@ -4,8 +4,8 @@ This repository contains samples for creating an **Event Schema Set** in the [**
 so that they can be used with **Microsoft Fabric Eventstreams** — programmatically, from the command line.
 
 Each sample takes a set of Avro schema files and creates a fully-populated Event Schema Set
-in a Fabric workspace using the Fabric REST API (via the Azure CLI or the Fabric CLI). Use them
-as a starting point for scripting, CI/CD, or bulk schema registration.
+in a Fabric workspace using the Fabric REST API (called with `curl`, authenticated via the Azure CLI).
+Use them as a starting point for scripting, CI/CD, or bulk schema registration.
 
 > **Preview.** Schema Registry in Fabric Real-Time Intelligence is currently in preview. Check
 > [region availability](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/schema-sets/schema-registry-region-availability)
@@ -64,10 +64,10 @@ In these samples, each event type is associated with one schema reference (`#/sc
 
 - A **Microsoft Fabric workspace** on a supported Fabric capacity, in a region where
   [Schema Registry is available](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/schema-sets/schema-registry-region-availability).
-- One of the following CLIs, signed in **as a user** (creating an Event Schema Set supports user
+- One of the following, signed in **as a user** (creating an Event Schema Set supports user
   identity only today — no service principal):
-  - [**Azure CLI**](https://learn.microsoft.com/cli/azure/install-azure-cli) (`az`), or
-  - [**Fabric CLI**](https://learn.microsoft.com/rest/api/fabric/articles/fabric-command-line-interface) (`fab`).
+  - the [**Azure CLI**](https://learn.microsoft.com/cli/azure/install-azure-cli) (`az login`).
+- [`curl`](https://curl.se/) — used to make the Fabric REST calls (the bearer token comes from `az`).
 - [`jq`](https://jqlang.github.io/jq/) — used to assemble the schema-set definition from the `.avsc` files.
 - `bash`, `base64` (standard on macOS/Linux; on Windows use WSL or Git Bash).
 
@@ -82,7 +82,7 @@ Run from the repository root. Building a definition is offline; creating, updati
 
 ```bash
 # 1) Sign in (User identity — no service principal today)
-az login            # or: fab auth login
+az login
 
 # 2) Build the sample's definition from its .avsc files (offline, no sign-in)
 ./build-definition.sh samples/gtfs-realtime
@@ -117,7 +117,7 @@ Two small, generic scripts at the repo root drive every sample; the sample folde
    `EventSchemaSetDefinition.json` with `jq`, so the Avro is never hand-escaped. Adding a sample
    means adding data (schemas + a manifest), not code.
 2. [`schemaset.sh`](schemaset.sh) base64-encodes that definition into a Fabric item **definition
-   part** and calls the Fabric REST API via `az rest` or `fab api`:
+   part** and calls the Fabric REST API with `curl` (using a bearer token from `az account get-access-token`):
    - **create** → `POST .../eventSchemaSets` (workspace root), or `POST .../items` with `folderId` (into a folder)
    - **update** → `POST .../eventSchemaSets/{id}/updateDefinition`
    - **list** → `GET .../eventSchemaSets`, or `POST .../eventSchemaSets/{id}/getDefinition` to read the event types / schemas inside a set
