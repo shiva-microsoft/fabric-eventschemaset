@@ -1,7 +1,7 @@
 # Microsoft Fabric — Event Schema Set samples
 
-Ready-to-run samples that create an **Event Schema Set** in the [**Schema Registry**](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/schema-sets/schema-registry-overview)
-of **Microsoft Fabric Real-Time Intelligence** — programmatically, from the command line.
+This repository contains samples for creating an **Event Schema Set** in the [**Event Schema Registry**](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/schema-sets/schema-registry-overview)
+so that they can be used with **Microsoft Fabric Eventstreams** — programmatically, from the command line.
 
 Each sample takes a set of Avro schema files and creates a fully-populated Event Schema Set
 in a Fabric workspace using the Fabric REST API (via the Azure CLI or the Fabric CLI). Use them
@@ -13,16 +13,15 @@ as a starting point for scripting, CI/CD, or bulk schema registration.
 
 ---
 
-## What is Schema Registry?
+## Event Schema Registry and Event Schema Sets
 
 Schema Registry is a central place to **define, validate, and evolve** the data schemas that flow
-through your real-time pipelines. When a schema is registered, Fabric can check that events match it
-as they move through an eventstream, during transformation, and before they reach destinations such
-as Eventhouse, Lakehouse, or Activator — catching bad data early and keeping downstream consumers
-consistent.
+through your real-time pipelines. When a schema is registered, and then used to configure an Eventstream connector, messages that pass through that connector are mapped to the schemas using the rules you configure, and then any messages that do not conform to the schema are rejected. This ensures that messages delivered into your eventstream are valid and consistent, and that downstream consumers can rely on the schema to interpret the data correctly. You can avoid errors during transformation, and destination such as Eventhouse, Lakehouse, or Activator — catching bad data early and keeping downstream consumers consistent.
 
 For the full concept overview, see
 [Schema Registry in Fabric Real-Time Intelligence](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/schema-sets/schema-registry-overview).
+
+An **Event Schema Set** is the top-level workspace item you create in Fabric. It groups related event schemas and their event types so producers and consumers can share one governed contract in Eventstreams.
 
 ### Key concepts
 
@@ -35,11 +34,29 @@ For the full concept overview, see
 
 ---
 
+## xRegistry Support and Fabric Terminology
+
+Fabric Event Schema Registry supports the [xRegistry](https://github.com/xregistry/spec) model, and these samples follow that shape when building an item definition.
+
+The table below shows how common xRegistry concepts map to Fabric terms used in this repo:
+
+| xRegistry concept | Fabric term | How it appears in these samples |
+|---|---|---|
+| **registry** | **Event Schema Registry** | The Fabric registry capability in your workspace/capacity. |
+| **schema group / collection** | **Event Schema Set** | One Fabric item containing related schemas + event types. |
+| **schema** | **Schema** | Avro schema entry under `schemas[]`. |
+| **schema version** | **Version** | Ordered entries under a schema's `versions[]`. |
+| **message/event type** | **Event type** | CloudEvents `type` mapped to a schema via `schemaUrl`. |
+
+In these samples, each event type is associated with one schema reference (`#/schemas/{schemaId}`) inside the Event Schema Set definition document.
+
+---
+
 ## Samples
 
 | Sample | What it creates | Highlights |
 |---|---|---|
-| [`gtfs-realtime/`](gtfs-realtime/README.md) | A public-transit schema set from the [GTFS-Realtime](https://gtfs.org/documentation/realtime/reference/) feed: `VehiclePosition`, `TripUpdate`, `Alert`. | Multiple schemas in one set; a schema with **two versions** (v1 → v2 adds optional fields). |
+| [`samples/gtfs-realtime/`](samples/gtfs-realtime/README.md) | A public-transit schema set from the [GTFS-Realtime](https://gtfs.org/documentation/realtime/reference/) feed: `VehiclePosition`, `TripUpdate`, `Alert`. | Multiple schemas in one set; a schema with **two versions** (v1 → v2 adds optional fields). |
 
 ---
 
@@ -74,7 +91,7 @@ az login            # or: fab auth login
 ./create-schemaset.sh --dry-run
 
 # Place the item inside a workspace folder
-./create-schemaset.sh --workspace <workspace-guid> --folder "Real-Time"
+./create-schemaset.sh --workspace <workspace-guid> --folder "schemaset-sample-folder"
 
 # Pick a specific sample / list what's available
 ./create-schemaset.sh --sample gtfs-realtime --workspace <workspace-guid>
@@ -86,7 +103,7 @@ az login            # or: fab auth login
 
 `create-schemaset.sh` at the root is a thin launcher: it selects a sample (default `gtfs-realtime`)
 and forwards the remaining options to that sample's own `create-schemaset.sh`. You can also run a
-sample directly, e.g. `bash gtfs-realtime/create-schemaset.sh --help`.
+sample directly, e.g. `bash samples/gtfs-realtime/create-schemaset.sh --help`.
 
 ---
 
@@ -100,7 +117,7 @@ sample directly, e.g. `bash gtfs-realtime/create-schemaset.sh --help`.
 3. The result is an Event Schema Set item in your workspace, pre-populated with all schemas, versions,
    and event types.
 
-See [`gtfs-realtime/README.md`](gtfs-realtime/README.md) for a step-by-step walkthrough of one sample,
+See [`samples/gtfs-realtime/README.md`](samples/gtfs-realtime/README.md) for a step-by-step walkthrough of one sample,
 including the schema/version layout and sample event payloads.
 
 ### Prefer the portal?

@@ -9,11 +9,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SAMPLES_DIR="$SCRIPT_DIR/samples"
 SAMPLE="gtfs-realtime"
 
 list_samples () {
   echo "Available samples:"
-  for d in "$SCRIPT_DIR"/*/create-schemaset.sh; do
+  for d in "$SAMPLES_DIR"/*/create-schemaset.sh; do
     [ -e "$d" ] && echo "  - $(basename "$(dirname "$d")")"
   done
 }
@@ -44,7 +45,7 @@ Examples:
 $(list_samples)
 
 For sample-specific options, see the sample's README or run:
-  bash <sample>/create-schemaset.sh --help
+  bash samples/<sample>/create-schemaset.sh --help
 EOF
 }
 
@@ -59,9 +60,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-TARGET="$SCRIPT_DIR/$SAMPLE/create-schemaset.sh"
+TARGET="$SAMPLES_DIR/$SAMPLE/create-schemaset.sh"
 if [ ! -f "$TARGET" ]; then
-  echo "Error: unknown sample '$SAMPLE' (no $SAMPLE/create-schemaset.sh)." >&2
+  echo "Error: unknown sample '$SAMPLE' (no samples/$SAMPLE/create-schemaset.sh)." >&2
   echo >&2
   list_samples >&2
   exit 1

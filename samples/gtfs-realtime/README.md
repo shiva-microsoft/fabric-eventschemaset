@@ -2,7 +2,7 @@
 
 A real-world, multi-schema example of creating a Fabric **[Event Schema Set](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/schema-sets/schema-registry-overview)** and populating it with Avro schemas via the Fabric REST API.
 
-> New here? Start with the [repository README](../README.md) for prerequisites, the concept overview, and how the root launcher works.
+> New here? Start with the [repository README](../../README.md) for prerequisites, the concept overview, and how the root launcher works.
 
 **Source:** [GTFS-Realtime](https://gtfs.org/documentation/realtime/reference/) public-transit feed, as normalized by the [clemensv/real-time-sources GTFS feeder](https://github.com/clemensv/real-time-sources/tree/main/feeders/gtfs). The field-level contract is taken from that feeder's `xreg/gtfs.xreg.json` manifest.
 
@@ -34,7 +34,7 @@ gtfs-realtime/
 
 ## Create the schema set
 
-**Prerequisites:** a Fabric workspace, `jq`, and `az` or `fab` signed in as a user — see the [repository README](../README.md#prerequisites).
+**Prerequisites:** a Fabric workspace, `jq`, and `az` or `fab` signed in as a user — see the [repository README](../../README.md#prerequisites).
 
 ```bash
 # From the repo root — the launcher runs this (default) sample
@@ -50,7 +50,7 @@ gtfs-realtime/
 ./create-schemaset.sh --workspace <workspace-guid> --folder-id <folder-guid>
 
 # Run this sample directly instead of via the root launcher
-cd gtfs-realtime
+cd samples/gtfs-realtime
 ./create-schemaset.sh --workspace <workspace-guid>
 
 # All options
