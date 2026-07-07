@@ -1,0 +1,30 @@
+{
+  "displayName": "GTFS Realtime Schemas",
+  "description": "GTFS-Realtime transit event schemas: VehiclePosition, TripUpdate, Alert",
+  "schemas": [
+    {
+      "id": "VehiclePositionEventData",
+      "versions": [
+        "schemas/VehiclePositionEventData.avsc",
+        "schemas/VehiclePositionEventData.v2.avsc"
+      ]
+    },
+    {
+      "id": "TripUpdateEventData",
+      "versions": [
+        "schemas/TripUpdateEventData.avsc"
+      ]
+    },
+    {
+      "id": "AlertEventData",
+      "versions": [
+        "schemas/AlertEventData.avsc"
+      ]
+    }
+  ],
+  "eventTypes": [
+    { "id": "GeneralTransitFeedRealTime.Vehicle.VehiclePosition", "schema": "VehiclePositionEventData" },
+    { "id": "GeneralTransitFeedRealTime.Trip.TripUpdate", "schema": "TripUpdateEventData" },
+    { "id": "GeneralTransitFeedRealTime.Alert.Alert", "schema": "AlertEventData" }
+  ]
+}

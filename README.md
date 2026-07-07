@@ -78,44 +78,52 @@ Find your **workspace ID** in the Fabric portal URL when the workspace is open:
 
 ## Quick start
 
-Run from the repository root:
+Run from the repository root. Building a definition is offline; creating, updating, and listing need sign-in.
 
 ```bash
-# Sign in first (user identity)
+# 1) Sign in (User identity — no service principal today)
 az login            # or: fab auth login
 
-# Create the default sample (gtfs-realtime) in your workspace
-./create-schemaset.sh --workspace <workspace-guid>
+# 2) Build the sample's definition from its .avsc files (offline, no sign-in)
+./build-definition.sh samples/gtfs-realtime
 
-# Preview what would be sent, without creating anything
-./create-schemaset.sh --dry-run
+# 3) Create the schema set in your workspace
+#    (add --folder-id <guid> to place it inside a workspace folder)
+./schemaset.sh create --workspace <workspace-guid> --sample samples/gtfs-realtime
 
-# Place the item inside a workspace folder
-./create-schemaset.sh --workspace <workspace-guid> --folder "schemaset-sample-folder"
+# 4) List the Event Schema Sets in the workspace (grab the new one's id)
+./schemaset.sh list schemasets --workspace <workspace-guid>
 
-# Pick a specific sample / list what's available
-./create-schemaset.sh --sample gtfs-realtime --workspace <workspace-guid>
-./create-schemaset.sh --list-samples
+# 5) Inspect what was created
+./schemaset.sh list event-types --workspace <workspace-guid> --schemaset-id <schemaset-guid>
+./schemaset.sh list schemas     --workspace <workspace-guid> --schemaset-id <schemaset-guid>
 
-# Full option list
-./create-schemaset.sh --help
+# 6) Edit the sample and push the change as a new definition
+./schemaset.sh update --workspace <workspace-guid> --schemaset-id <schemaset-guid> --sample samples/gtfs-realtime
 ```
 
-`create-schemaset.sh` at the root is a thin launcher: it selects a sample (default `gtfs-realtime`)
-and forwards the remaining options to that sample's own `create-schemaset.sh`. You can also run a
-sample directly, e.g. `bash samples/gtfs-realtime/create-schemaset.sh --help`.
+`create`/`update` rebuild the definition first (pass `--no-build` to skip), and any command accepts
+`--dry-run` to print the REST call — and request body — without sending it. Run `./schemaset.sh --help`
+for the full option list.
 
 ---
 
 ## How it works
 
-1. The sample's script assembles `EventSchemaSetDefinition.json` from the `.avsc` files with `jq`,
-   so the Avro never has to be hand-escaped.
-2. It base64-encodes that definition into a Fabric item **definition part** and `POST`s it to the
-   Fabric REST API (`.../workspaces/{id}/eventSchemaSets`, or the generic Create Item endpoint when
-   targeting a folder) via `az rest` or `fab api`.
-3. The result is an Event Schema Set item in your workspace, pre-populated with all schemas, versions,
-   and event types.
+Two small, generic scripts at the repo root drive every sample; the sample folders hold **data only**.
+
+1. [`build-definition.sh`](build-definition.sh) reads a sample's `manifest.json` — which `.avsc`
+   files map to which schema/version, plus the event types — and assembles
+   `EventSchemaSetDefinition.json` with `jq`, so the Avro is never hand-escaped. Adding a sample
+   means adding data (schemas + a manifest), not code.
+2. [`schemaset.sh`](schemaset.sh) base64-encodes that definition into a Fabric item **definition
+   part** and calls the Fabric REST API via `az rest` or `fab api`:
+   - **create** → `POST .../eventSchemaSets` (workspace root), or `POST .../items` with `folderId` (into a folder)
+   - **update** → `POST .../eventSchemaSets/{id}/updateDefinition`
+   - **list** → `GET .../eventSchemaSets`, or `POST .../eventSchemaSets/{id}/getDefinition` to read the event types / schemas inside a set
+
+The result is an Event Schema Set item in your workspace, pre-populated with all schemas, versions,
+and event types.
 
 See [`samples/gtfs-realtime/README.md`](samples/gtfs-realtime/README.md) for a step-by-step walkthrough of one sample,
 including the schema/version layout and sample event payloads.
