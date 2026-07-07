@@ -1,0 +1,26 @@
+{
+  "trip": {
+    "trip_id": "68606321",
+    "route_id": "Red",
+    "direction_id": 0,
+    "start_time": "14:19:00",
+    "start_date": "20260707",
+    "schedule_relationship": "SCHEDULED"
+  },
+  "vehicle": {
+    "id": "1877",
+    "label": "1877"
+  },
+  "position": {
+    "latitude": 42.36191,
+    "longitude": -71.06779,
+    "bearing": 135.0,
+    "speed": 12.5
+  },
+  "current_stop_sequence": 4,
+  "stop_id": "70077",
+  "current_status": "IN_TRANSIT_TO",
+  "timestamp": 1783434000,
+  "congestion_level": "RUNNING_SMOOTHLY",
+  "occupancy_status": "FEW_SEATS_AVAILABLE"
+}

@@ -1,0 +1,96 @@
+{
+  "type": "record",
+  "name": "TripUpdateEventData",
+  "namespace": "GeneralTransitFeedRealTime.Trip",
+  "doc": "Realtime update of the progress of a vehicle along a trip. Field contract mirrors the GTFS-Realtime TripUpdate entity as normalized by the clemensv/real-time-sources GTFS feeder (xreg/gtfs.xreg.json).",
+  "fields": [
+    {
+      "name": "trip",
+      "doc": "The trip this message applies to. Required. At most one TripUpdate exists per trip instance.",
+      "type": {
+        "type": "record",
+        "name": "TripDescriptor",
+        "doc": "Identifies an instance of a GTFS trip, or all instances of a trip along a route.",
+        "fields": [
+          { "name": "trip_id", "type": ["null", "string"], "default": null, "doc": "trip_id from the GTFS feed this selector refers to." },
+          { "name": "route_id", "type": ["null", "string"], "default": null, "doc": "route_id from the GTFS feed this selector refers to." },
+          { "name": "direction_id", "type": ["null", "int"], "default": null, "doc": "Direction of travel (trips.txt direction_id). Experimental." },
+          { "name": "start_time", "type": ["null", "string"], "default": null, "doc": "Initially scheduled start time of this trip instance (e.g. 14:19:00)." },
+          { "name": "start_date", "type": ["null", "string"], "default": null, "doc": "Scheduled start date of this trip instance in YYYYMMDD format." },
+          {
+            "name": "schedule_relationship",
+            "doc": "Relation between this trip and the static schedule.",
+            "default": null,
+            "type": ["null", { "type": "enum", "name": "TripScheduleRelationship", "symbols": ["SCHEDULED", "ADDED", "UNSCHEDULED", "CANCELED"] }]
+          }
+        ]
+      }
+    },
+    {
+      "name": "vehicle",
+      "doc": "Additional information on the vehicle serving this trip.",
+      "default": null,
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "VehicleDescriptor",
+          "doc": "Identification information for the vehicle performing a trip.",
+          "fields": [
+            { "name": "id", "type": ["null", "string"], "default": null, "doc": "Internal system identification of the vehicle; unique per vehicle." },
+            { "name": "label", "type": ["null", "string"], "default": null, "doc": "User-visible label shown to passengers to identify the vehicle." },
+            { "name": "license_plate", "type": ["null", "string"], "default": null, "doc": "The license plate of the vehicle." }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stop_time_update",
+      "doc": "Updates to StopTimes for the trip, sorted by stop_sequence. Required.",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "StopTimeUpdate",
+          "doc": "Realtime update for arrival and/or departure at a single stop.",
+          "fields": [
+            { "name": "stop_sequence", "type": ["null", "int"], "default": null, "doc": "Order of this stop for the trip (matches stop_times.txt stop_sequence)." },
+            { "name": "stop_id", "type": ["null", "string"], "default": null, "doc": "Identifies the serviced stop (matches stops.txt stop_id)." },
+            {
+              "name": "arrival",
+              "doc": "Predicted arrival event at the stop.",
+              "default": null,
+              "type": [
+                "null",
+                {
+                  "type": "record",
+                  "name": "StopTimeEvent",
+                  "doc": "Timing information for a single predicted event (arrival or departure).",
+                  "fields": [
+                    { "name": "delay", "type": ["null", "int"], "default": null, "doc": "Delay in seconds from the scheduled time; positive = late, negative = early." },
+                    { "name": "time", "type": ["null", "long"], "default": null, "doc": "Event time as POSIX time (seconds since 1970-01-01 UTC)." },
+                    { "name": "uncertainty", "type": ["null", "int"], "default": null, "doc": "Uncertainty of the prediction in seconds; 0 means fully certain." }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "departure",
+              "doc": "Predicted departure event at the stop.",
+              "default": null,
+              "type": ["null", "StopTimeEvent"]
+            },
+            {
+              "name": "schedule_relationship",
+              "doc": "Relation of this stop to the static schedule.",
+              "default": null,
+              "type": ["null", { "type": "enum", "name": "StopTimeScheduleRelationship", "symbols": ["SCHEDULED", "SKIPPED", "NO_DATA", "UNSCHEDULED"] }]
+            }
+          ]
+        }
+      }
+    },
+    { "name": "timestamp", "type": ["null", "long"], "default": null, "doc": "Moment the trip's realtime progress was measured, in POSIX time." },
+    { "name": "delay", "type": ["null", "int"], "default": null, "doc": "Current schedule deviation for the trip in seconds; positive = late, negative = early. Experimental." }
+  ]
+}

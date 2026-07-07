@@ -1,0 +1,117 @@
+{
+  "type": "record",
+  "name": "VehiclePositionEventData",
+  "namespace": "GeneralTransitFeedRealTime.Vehicle",
+  "doc": "Realtime positioning information for a transit vehicle. Field contract mirrors the GTFS-Realtime VehiclePosition entity as normalized by the clemensv/real-time-sources GTFS feeder (xreg/gtfs.xreg.json). v2 adds vehicle-level occupancy_percentage and per-carriage multi_carriage_details (both optional, forward-compatible with v1).",
+  "fields": [
+    {
+      "name": "trip",
+      "doc": "The trip this vehicle is serving. May be absent or partial if the vehicle cannot be matched to a trip instance.",
+      "default": null,
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "TripDescriptor",
+          "doc": "Identifies an instance of a GTFS trip, or all instances of a trip along a route.",
+          "fields": [
+            { "name": "trip_id", "type": ["null", "string"], "default": null, "doc": "trip_id from the GTFS feed this selector refers to." },
+            { "name": "route_id", "type": ["null", "string"], "default": null, "doc": "route_id from the GTFS feed this selector refers to." },
+            { "name": "direction_id", "type": ["null", "int"], "default": null, "doc": "Direction of travel (trips.txt direction_id). Experimental." },
+            { "name": "start_time", "type": ["null", "string"], "default": null, "doc": "Initially scheduled start time of this trip instance (e.g. 14:19:00)." },
+            { "name": "start_date", "type": ["null", "string"], "default": null, "doc": "Scheduled start date of this trip instance in YYYYMMDD format." },
+            {
+              "name": "schedule_relationship",
+              "doc": "Relation between this trip and the static schedule.",
+              "default": null,
+              "type": ["null", { "type": "enum", "name": "TripScheduleRelationship", "symbols": ["SCHEDULED", "ADDED", "UNSCHEDULED", "CANCELED"] }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "vehicle",
+      "doc": "Identification of the vehicle performing the trip.",
+      "default": null,
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "VehicleDescriptor",
+          "doc": "Identification information for the vehicle performing a trip.",
+          "fields": [
+            { "name": "id", "type": ["null", "string"], "default": null, "doc": "Internal system identification of the vehicle; unique per vehicle." },
+            { "name": "label", "type": ["null", "string"], "default": null, "doc": "User-visible label shown to passengers to identify the vehicle." },
+            { "name": "license_plate", "type": ["null", "string"], "default": null, "doc": "The license plate of the vehicle." }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "position",
+      "doc": "Current position of this vehicle.",
+      "default": null,
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "Position",
+          "doc": "A geographic position in the WGS-84 coordinate system.",
+          "fields": [
+            { "name": "latitude", "type": "float", "doc": "Degrees North, in the WGS-84 coordinate system." },
+            { "name": "longitude", "type": "float", "doc": "Degrees East, in the WGS-84 coordinate system." },
+            { "name": "bearing", "type": ["null", "float"], "default": null, "doc": "Bearing in degrees clockwise from North (0 = North, 90 = East)." },
+            { "name": "odometer", "type": ["null", "double"], "default": null, "doc": "Odometer value, in meters." },
+            { "name": "speed", "type": ["null", "float"], "default": null, "doc": "Momentary speed measured by the vehicle, in meters per second." }
+          ]
+        }
+      ]
+    },
+    { "name": "current_stop_sequence", "type": ["null", "int"], "default": null, "doc": "Stop sequence index of the current stop; meaning is determined by current_status." },
+    { "name": "stop_id", "type": ["null", "string"], "default": null, "doc": "Identifies the current stop (matches stops.txt stop_id)." },
+    {
+      "name": "current_status",
+      "doc": "Exact status of the vehicle with respect to the current stop. Ignored if current_stop_sequence is missing.",
+      "default": null,
+      "type": ["null", { "type": "enum", "name": "VehicleStopStatus", "symbols": ["INCOMING_AT", "STOPPED_AT", "IN_TRANSIT_TO"] }]
+    },
+    { "name": "timestamp", "type": ["null", "long"], "default": null, "doc": "Moment the vehicle position was measured, in POSIX time (seconds since 1970-01-01 UTC)." },
+    {
+      "name": "congestion_level",
+      "doc": "Congestion level affecting this vehicle.",
+      "default": null,
+      "type": ["null", { "type": "enum", "name": "CongestionLevel", "symbols": ["UNKNOWN_CONGESTION_LEVEL", "RUNNING_SMOOTHLY", "STOP_AND_GO", "CONGESTION", "SEVERE_CONGESTION"] }]
+    },
+    {
+      "name": "occupancy_status",
+      "doc": "Degree of passenger occupancy of the vehicle. Experimental.",
+      "default": null,
+      "type": ["null", { "type": "enum", "name": "OccupancyStatus", "symbols": ["EMPTY", "MANY_SEATS_AVAILABLE", "FEW_SEATS_AVAILABLE", "STANDING_ROOM_ONLY", "CRUSHED_STANDING_ROOM_ONLY", "FULL", "NOT_ACCEPTING_PASSENGERS"] }]
+    },
+    { "name": "occupancy_percentage", "type": ["null", "int"], "default": null, "doc": "Percentage of vehicle occupancy (0-100+, may exceed 100 when crush-loaded). Added in v2." },
+    {
+      "name": "multi_carriage_details",
+      "doc": "Per-carriage occupancy and identity for multi-carriage vehicles (e.g. trains). Added in v2.",
+      "default": null,
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "type": "record",
+            "name": "CarriageDetails",
+            "doc": "Occupancy and identity details for a single carriage of a multi-carriage vehicle.",
+            "fields": [
+              { "name": "id", "type": ["null", "string"], "default": null, "doc": "Internal identification of the carriage." },
+              { "name": "label", "type": ["null", "string"], "default": null, "doc": "User-visible label of the carriage shown to passengers." },
+              { "name": "occupancy_status", "type": ["null", "OccupancyStatus"], "default": null, "doc": "Degree of passenger occupancy of this carriage." },
+              { "name": "occupancy_percentage", "type": ["null", "int"], "default": null, "doc": "Percentage of occupancy in this carriage (0-100+)." },
+              { "name": "carriage_sequence", "type": ["null", "int"], "default": null, "doc": "Order of this carriage relative to others in the vehicle (1-based)." }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

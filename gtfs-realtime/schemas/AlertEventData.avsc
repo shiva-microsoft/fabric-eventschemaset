@@ -1,0 +1,123 @@
+{
+  "type": "record",
+  "name": "AlertEventData",
+  "namespace": "GeneralTransitFeedRealTime.Alert",
+  "doc": "An alert indicating an incident in the public transit network. Field contract mirrors the GTFS-Realtime Alert entity as normalized by the clemensv/real-time-sources GTFS feeder (xreg/gtfs.xreg.json).",
+  "fields": [
+    {
+      "name": "active_period",
+      "doc": "Time ranges when the alert should be shown. Required. If multiple ranges are given, the alert is shown during all of them.",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "TimeRange",
+          "doc": "A time range in POSIX time; open-ended when start or end is omitted.",
+          "fields": [
+            { "name": "start", "type": ["null", "long"], "default": null, "doc": "Start of the range as POSIX time; if missing, the range is open-ended in the past." },
+            { "name": "end", "type": ["null", "long"], "default": null, "doc": "End of the range as POSIX time; if missing, the range is open-ended in the future." }
+          ]
+        }
+      }
+    },
+    {
+      "name": "informed_entity",
+      "doc": "Entities whose users should be notified of this alert. Required.",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "EntitySelector",
+          "doc": "A selector for an entity affected by an alert.",
+          "fields": [
+            { "name": "agency_id", "type": ["null", "string"], "default": null, "doc": "Identifies the affected agency." },
+            { "name": "route_id", "type": ["null", "string"], "default": null, "doc": "Identifies the affected route." },
+            { "name": "route_type", "type": ["null", "int"], "default": null, "doc": "Identifies the affected route type (GTFS route_type)." },
+            {
+              "name": "trip",
+              "doc": "Identifies the affected trip.",
+              "default": null,
+              "type": [
+                "null",
+                {
+                  "type": "record",
+                  "name": "TripDescriptor",
+                  "doc": "Identifies an instance of a GTFS trip, or all instances of a trip along a route.",
+                  "fields": [
+                    { "name": "trip_id", "type": ["null", "string"], "default": null, "doc": "trip_id from the GTFS feed this selector refers to." },
+                    { "name": "route_id", "type": ["null", "string"], "default": null, "doc": "route_id from the GTFS feed this selector refers to." },
+                    { "name": "direction_id", "type": ["null", "int"], "default": null, "doc": "Direction of travel (trips.txt direction_id). Experimental." },
+                    { "name": "start_time", "type": ["null", "string"], "default": null, "doc": "Initially scheduled start time of this trip instance." },
+                    { "name": "start_date", "type": ["null", "string"], "default": null, "doc": "Scheduled start date of this trip instance in YYYYMMDD format." },
+                    {
+                      "name": "schedule_relationship",
+                      "doc": "Relation between this trip and the static schedule.",
+                      "default": null,
+                      "type": ["null", { "type": "enum", "name": "TripScheduleRelationship", "symbols": ["SCHEDULED", "ADDED", "UNSCHEDULED", "CANCELED"] }]
+                    }
+                  ]
+                }
+              ]
+            },
+            { "name": "stop_id", "type": ["null", "string"], "default": null, "doc": "Identifies the affected stop." }
+          ]
+        }
+      }
+    },
+    {
+      "name": "cause",
+      "doc": "Cause of this alert.",
+      "default": null,
+      "type": ["null", { "type": "enum", "name": "AlertCause", "symbols": ["UNKNOWN_CAUSE", "OTHER_CAUSE", "TECHNICAL_PROBLEM", "STRIKE", "DEMONSTRATION", "ACCIDENT", "HOLIDAY", "WEATHER", "MAINTENANCE", "CONSTRUCTION", "POLICE_ACTIVITY", "MEDICAL_EMERGENCY"] }]
+    },
+    {
+      "name": "effect",
+      "doc": "What effect this problem has on the affected entity.",
+      "default": null,
+      "type": ["null", { "type": "enum", "name": "AlertEffect", "symbols": ["NO_SERVICE", "REDUCED_SERVICE", "SIGNIFICANT_DELAYS", "DETOUR", "ADDITIONAL_SERVICE", "MODIFIED_SERVICE", "OTHER_EFFECT", "UNKNOWN_EFFECT", "STOP_MOVED"] }]
+    },
+    {
+      "name": "url",
+      "doc": "URL providing additional information about the alert.",
+      "default": null,
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "TranslatedString",
+          "doc": "An internationalized message containing per-language versions of a snippet of text or a URL.",
+          "fields": [
+            {
+              "name": "translation",
+              "doc": "At least one translation must be provided.",
+              "type": {
+                "type": "array",
+                "items": {
+                  "type": "record",
+                  "name": "Translation",
+                  "doc": "A single language-specific translation.",
+                  "fields": [
+                    { "name": "text", "type": "string", "doc": "The translated string in the given language." },
+                    { "name": "language", "type": ["null", "string"], "default": null, "doc": "BCP-47 language code; omitted for a language-agnostic default." }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "header_text",
+      "doc": "Short summary of the alert as plain text.",
+      "default": null,
+      "type": ["null", "TranslatedString"]
+    },
+    {
+      "name": "description_text",
+      "doc": "Full description of the alert as plain text; adds to the header information.",
+      "default": null,
+      "type": ["null", "TranslatedString"]
+    }
+  ]
+}

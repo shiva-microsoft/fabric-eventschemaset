@@ -1,0 +1,20 @@
+{
+  "active_period": [
+    { "start": 1783432800, "end": 1783461600 }
+  ],
+  "informed_entity": [
+    { "agency_id": "MBTA", "route_id": "Red", "route_type": 1 }
+  ],
+  "cause": "MAINTENANCE",
+  "effect": "SIGNIFICANT_DELAYS",
+  "header_text": {
+    "translation": [
+      { "text": "Red Line delays of about 15 minutes near Park Street.", "language": "en" }
+    ]
+  },
+  "description_text": {
+    "translation": [
+      { "text": "Southbound Red Line trains are experiencing delays of approximately 15 minutes while crews perform scheduled track maintenance near Park Street. Seek alternate routes where possible.", "language": "en" }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "trip": {
+    "trip_id": "68606321",
+    "route_id": "Red",
+    "direction_id": 0,
+    "start_date": "20260707",
+    "schedule_relationship": "SCHEDULED"
+  },
+  "vehicle": {
+    "id": "1877",
+    "label": "1877"
+  },
+  "stop_time_update": [
+    {
+      "stop_sequence": 5,
+      "stop_id": "70079",
+      "arrival": { "delay": 60, "time": 1783434180, "uncertainty": 30 },
+      "departure": { "delay": 45, "time": 1783434210 },
+      "schedule_relationship": "SCHEDULED"
+    },
+    {
+      "stop_sequence": 6,
+      "stop_id": "70081",
+      "arrival": { "delay": 90, "time": 1783434360 },
+      "schedule_relationship": "SCHEDULED"
+    }
+  ],
+  "timestamp": 1783434000,
+  "delay": 60
+}
