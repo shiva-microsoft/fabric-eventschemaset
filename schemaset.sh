@@ -136,6 +136,10 @@ call_api () {
   local args=(-sS -X "$method" -H "Authorization: Bearer $token")
   if [ -n "$body" ]; then
     args+=(-H "Content-Type: application/json" --data-binary "@$body")
+  elif [ "$method" != GET ]; then
+    # Bodyless POST (e.g. getDefinition) still needs Content-Length: 0, or Fabric
+    # returns HTTP 411 Length Required — send an explicit empty body.
+    args+=(-H "Content-Type: application/json" --data-binary "")
   fi
   # Append the HTTP status on its own trailing line, then split it back off.
   resp="$(curl "${args[@]}" -w $'\n%{http_code}' "$url")"
